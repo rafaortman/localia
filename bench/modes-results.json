@@ -1,0 +1,114 @@
+[
+  {
+    "ckpt": "sd_xl_base_1.0.safetensors",
+    "mode": "img2img",
+    "denoise": 0.2,
+    "file": "sd_xl_base_1.0__img2img-0.2.png",
+    "seconds": 43,
+    "peakVramMB": 5389
+  },
+  {
+    "ckpt": "sd_xl_base_1.0.safetensors",
+    "mode": "img2img",
+    "denoise": 0.3,
+    "file": "sd_xl_base_1.0__img2img-0.3.png",
+    "seconds": 39.8,
+    "peakVramMB": 5357
+  },
+  {
+    "ckpt": "sd_xl_base_1.0.safetensors",
+    "mode": "img2img",
+    "denoise": 0.4,
+    "file": "sd_xl_base_1.0__img2img-0.4.png",
+    "seconds": 39,
+    "peakVramMB": 5357
+  },
+  {
+    "ckpt": "sd_xl_base_1.0.safetensors",
+    "mode": "img2img",
+    "denoise": 0.6,
+    "file": "sd_xl_base_1.0__img2img-0.6.png",
+    "seconds": 39.9,
+    "peakVramMB": 5357
+  },
+  {
+    "ckpt": "sd_xl_base_1.0.safetensors",
+    "mode": "img2img",
+    "denoise": 0.8,
+    "file": "sd_xl_base_1.0__img2img-0.8.png",
+    "seconds": 38.9,
+    "peakVramMB": 5357
+  },
+  {
+    "ckpt": "sd_xl_base_1.0.safetensors",
+    "mode": "inpaint",
+    "denoise": 0.75,
+    "file": "sd_xl_base_1.0__inpaint-0.75.png",
+    "seconds": 39.8,
+    "peakVramMB": 5325
+  },
+  {
+    "ckpt": "sd_xl_base_1.0.safetensors",
+    "mode": "inpaint",
+    "denoise": 0.9,
+    "file": "sd_xl_base_1.0__inpaint-0.9.png",
+    "seconds": 39.8,
+    "peakVramMB": 5389
+  },
+  {
+    "ckpt": "RealVisXL_V5.0_fp16.safetensors",
+    "mode": "img2img",
+    "denoise": 0.2,
+    "file": "RealVisXL_V5.0_fp16__img2img-0.2.png",
+    "seconds": 39.9,
+    "peakVramMB": 5325
+  },
+  {
+    "ckpt": "RealVisXL_V5.0_fp16.safetensors",
+    "mode": "img2img",
+    "denoise": 0.3,
+    "file": "RealVisXL_V5.0_fp16__img2img-0.3.png",
+    "seconds": 39.2,
+    "peakVramMB": 5389
+  },
+  {
+    "ckpt": "RealVisXL_V5.0_fp16.safetensors",
+    "mode": "img2img",
+    "denoise": 0.4,
+    "file": "RealVisXL_V5.0_fp16__img2img-0.4.png",
+    "seconds": 40.1,
+    "peakVramMB": 5357
+  },
+  {
+    "ckpt": "RealVisXL_V5.0_fp16.safetensors",
+    "mode": "img2img",
+    "denoise": 0.6,
+    "file": "RealVisXL_V5.0_fp16__img2img-0.6.png",
+    "seconds": 38.9,
+    "peakVramMB": 5357
+  },
+  {
+    "ckpt": "RealVisXL_V5.0_fp16.safetensors",
+    "mode": "img2img",
+    "denoise": 0.8,
+    "file": "RealVisXL_V5.0_fp16__img2img-0.8.png",
+    "seconds": 40,
+    "peakVramMB": 5357
+  },
+  {
+    "ckpt": "RealVisXL_V5.0_fp16.safetensors",
+    "mode": "inpaint",
+    "denoise": 0.75,
+    "file": "RealVisXL_V5.0_fp16__inpaint-0.75.png",
+    "seconds": 40.9,
+    "peakVramMB": 5371
+  },
+  {
+    "ckpt": "RealVisXL_V5.0_fp16.safetensors",
+    "mode": "inpaint",
+    "denoise": 0.9,
+    "file": "RealVisXL_V5.0_fp16__inpaint-0.9.png",
+    "seconds": 40.9,
+    "peakVramMB": 5403
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "ckpt": "sd_xl_base_1.0.safetensors",
+    "prompt": "objeto",
+    "seconds": 39.9,
+    "peakVramMB": 5357
+  },
+  {
+    "ckpt": "sd_xl_base_1.0.safetensors",
+    "prompt": "pessoa",
+    "seconds": 33.6,
+    "peakVramMB": 5333
+  },
+  {
+    "ckpt": "sd_xl_base_1.0.safetensors",
+    "prompt": "cena",
+    "seconds": 32.6,
+    "peakVramMB": 5333
+  },
+  {
+    "ckpt": "RealVisXL_V5.0_fp16.safetensors",
+    "prompt": "objeto",
+    "seconds": 33.5,
+    "peakVramMB": 5333
+  },
+  {
+    "ckpt": "RealVisXL_V5.0_fp16.safetensors",
+    "prompt": "pessoa",
+    "seconds": 33.5,
+    "peakVramMB": 5365
+  },
+  {
+    "ckpt": "RealVisXL_V5.0_fp16.safetensors",
+    "prompt": "cena",
+    "seconds": 32.7,
+    "peakVramMB": 5301
+  }
+]

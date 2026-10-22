@@ -1,6 +1,6 @@
 # localia
 
-Interface local de geração e edição de imagens (ComfyUI) com chat auxiliar (Ollama), rodando inteiramente no notebook do Rafa. Projeto pessoal; repositório público `localia` no GitHub (conta rafaortman) — ainda a criar.
+Interface local de geração e edição de imagens (ComfyUI) com chat auxiliar (Ollama), rodando inteiramente no notebook do Rafa. Projeto pessoal; repositório público `localia` no GitHub (conta rafaortman), já criado.
 
 ## Hardware (restrição central)
 
@@ -56,7 +56,7 @@ O modo é **global no servidor** (uma GPU = um estado). Toggle na interface cham
 
 - **→ image**: descarrega o Ollama (`POST /api/generate {"model": <modelo>, "keep_alive": 0}`). O SDXL fica residente.
 - **→ chat**: libera o ComfyUI (`POST /free {"unload_models": true, "free_memory": true}`). O LLM fica residente.
-- Mostrar indicador de "carregando modelo" durante a troca (~10–20 s esperados).
+- Mostrar indicador de "carregando modelo" durante a troca. Medido (`bench/swap.js`, arquivos já no cache de RAM do Windows): ~4 s para o chat, ~2 s para a imagem. Com cache frio (primeira vez após boot) medimos 25 s no Ollama e +7 s no SDXL.
 - Bloquear envio de imagem em modo chat e vice-versa.
 
 ## Modo imagem (ComfyUI, um único checkpoint SDXL para tudo)
@@ -105,7 +105,7 @@ LLM empilhado na geração · IP-Adapter · modelo dedicado de inpainting · Qwe
 4. Nome exato do checkpoint SDXL em `models/checkpoints`.
 5. `node -v` (≥ 20) e `git --version`.
 6. Ollama instalado + um modelo de 3–4B baixado; medir tokens/s.
-7. Criar o repositório público `localia` (via `gh` após `gh auth login`).
+7. ~~Criar o repositório público `localia`~~ — feito.
 
 ## Fases
 

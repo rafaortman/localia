@@ -1,0 +1,14 @@
+{
+  "imagemQuente": 33.8,
+  "paraChat": {
+    "liberarComfy": 0,
+    "cargaOllama": 4,
+    "total": 4.1
+  },
+  "paraImagem": {
+    "descarregarOllama": 0.1,
+    "imagemFria": 35.8,
+    "cargaExtra": 2,
+    "total": 2
+  }
+}
