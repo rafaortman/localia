@@ -74,7 +74,12 @@ A interface é uma caixa de prompt + imagem opcional + máscara opcional. O modo
 - `GET /object_info/CheckpointLoaderSimple` para listar checkpoints instalados.
 - `POST /interrupt` para cancelar.
 - Redimensionar imagens enviadas no front para ~1 MP com lados múltiplos de 64 antes do upload (evita estourar VRAM).
-- Defaults SDXL: 1024×1024 (ou buckets equivalentes), steps 25, cfg 6.5, sampler `dpmpp_2m`, scheduler `karras`. Tempo esperado: ~40–90 s por imagem.
+- Defaults SDXL (decididos pelo Rafa após o benchmark): 1024×1024 (ou buckets equivalentes), **steps 15**, **cfg 7**, sampler `dpmpp_2m`, scheduler `karras` (provisório: `euler_ancestral` como opção, não testado com várias seeds). Tempo medido: ~24 s por imagem com 15 steps em 1024² (~32 s com 25).
+- Denoise (provisório): img2img 0,8; inpaint 0,9.
+- **Checkpoint (decisão do Rafa):** padrão `sd_xl_base_1.0`, para todos os modos. A interface permite **trocar manualmente** por outro checkpoint instalado (lista via `/object_info/CheckpointLoaderSimple`, hoje: SDXL base e RealVisXL V5.0). A troca vale para a sessão inteira, não por modo, e mostra o indicador "carregando modelo" (tempo da troca entre dois checkpoints ainda não medido; estimativa 2–7 s). Não alternar checkpoints automaticamente entre modos.
+- Viés a lembrar: no teste de img2img/inpaint a imagem de entrada foi gerada pelo RealVisXL, o que pode ter favorecido esse modelo; a escolha do denoise 0,8 e 0,9 vale para essa entrada.
+- **Valores editáveis, com linguagem clara (decisão do Rafa):** steps, cfg, sampler, denoise e seed ficam editáveis na interface. Mudar qualquer valor gera **outra imagem** (parecida, não igual; medido: cfg, tamanho e sampler mudam a composição mesmo com a mesma seed), então o botão de confirmação se chama **"Recriar imagem"**, nunca "Aplicar" ou "Atualizar". A seed fica travada por padrão (maximiza a semelhança) e cada resultado mostra os valores usados. Para refinar a mesma imagem sem refazê-la, o caminho é "continuar a partir desta" (img2img).
+- **Tamanho fixo em 1024 (decisão do Rafa):** mudar o tamanho com a mesma seed muda a composição inteira da imagem (medido em 768/896/1024), então não há "rascunho rápido" que preveja a imagem final. Não oferecer tamanhos menores como prévia.
 - Máscara: canvas com pincel sobre a imagem, exportada como PNG.
 - Qualquer resultado pode virar a entrada da próxima geração ("continuar a partir desta").
 - **Presets de estilo**: botões que acrescentam blocos prontos ao prompt e um negativo padrão. Custo zero de hardware.

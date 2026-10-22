@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "folha-de-contato",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["bench/serve.js"],
+      "port": 3100
+    }
+  ]
+}

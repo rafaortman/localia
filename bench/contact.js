@@ -11,7 +11,7 @@ const short = { 'sd_xl_base_1.0.safetensors': 'SDXL base', 'RealVisXL_V5.0_fp16.
 const D = { steps: 25, cfg: 6.5, sampler: 'dpmpp_2m', scheduler: 'karras', size: 1024 };
 
 const cell = (src, cap) => src
-  ? `<figure><img src="${src}" loading="lazy"><figcaption>${cap}</figcaption></figure>`
+  ? `<figure data-src="${src}" data-cap="${cap.replace(/<br>/g, " · ")}"><img src="${src}" loading="lazy"><figcaption>${cap}</figcaption></figure>`
   : `<figure class="miss"><figcaption>${cap}<br>sem imagem</figcaption></figure>`;
 const stat = (r) => (r.peakVramMB ? `${r.seconds} s · ${(r.peakVramMB / 1024).toFixed(1)} GB` : '');
 
@@ -59,6 +59,22 @@ body{font:14px sans-serif;margin:16px;background:#111;color:#eee}h2{margin:28px 
 .grid{display:grid;grid-template-columns:80px repeat(var(--n),minmax(0,240px));gap:8px;align-items:start}
 .label{font-weight:600;padding-top:8px}figure{margin:0}img{width:100%;display:block}
 figcaption{font-size:12px;color:#aaa}.miss{border:1px dashed #555;padding:8px}
+figure[data-src]{cursor:zoom-in}figure.sel img{outline:3px solid #4da3ff}
+#box{position:fixed;inset:0;background:#000e;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:zoom-out}
+#box img{max-width:96vw;max-height:88vh}#box.on{display:flex}
 </style>
-<h1>Folha de contato</h1><p>Seed 123456789; steps, cfg, sampler, tamanho e modos usam o prompt do pescador. Cada linha é um checkpoint; cada coluna, um valor.</p>${parts}`);
+<h1>Folha de contato</h1><p>Seed 123456789; steps, cfg, sampler, tamanho e modos usam o prompt do pescador. Cada linha é um checkpoint; cada coluna, um valor.</p>${parts}<div id="box"><img><div id="boxcap"></div></div>
+<script>
+// window.sel = última imagem clicada, window.hov = imagem sob o mouse (lidas pelo Claude durante a inspeção)
+const box = document.getElementById("box");
+document.addEventListener("mouseover", (e) => { const f = e.target.closest("figure[data-src]"); if (f) window.hov = { src: f.dataset.src, cap: f.dataset.cap }; });
+document.addEventListener("click", (e) => {
+  if (box.classList.contains("on")) { box.classList.remove("on"); return; }
+  const f = e.target.closest("figure[data-src]"); if (!f) return;
+  document.querySelectorAll("figure.sel").forEach((x) => x.classList.remove("sel")); f.classList.add("sel");
+  window.sel = { src: f.dataset.src, cap: f.dataset.cap };
+  box.querySelector("img").src = f.dataset.src; document.getElementById("boxcap").textContent = f.dataset.cap; box.classList.add("on");
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") box.classList.remove("on"); });
+</script>`);
 console.log('ok');
