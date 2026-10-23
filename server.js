@@ -80,7 +80,10 @@ const server = http.createServer(async (req, res) => {
   const path = new URL(req.url, 'http://x').pathname;
   if (path.startsWith('/comfy/')) return proxy(req, res, comfy, '/comfy');
   if (path.startsWith('/ollama/')) return proxy(req, res, ollama, '/ollama');
-  if (path === '/api/status') return sendJson(res, 200, { mode, comfy: await alive(comfy.host, comfy.port), ollama: await alive(ollama.host, ollama.port) });
+  if (path === '/api/status') {
+    const comfyUp = await alive(comfy.host, comfy.port);
+    return sendJson(res, 200, { mode, comfy: comfyUp, comfyStarting: !comfyUp && comfyStartedAt > 0, ollama: await alive(ollama.host, ollama.port) });
+  }
   if (path === '/api/mode' && req.method === 'POST') {
     const { mode: next } = await readBody(req);
     if (!['image', 'chat'].includes(next)) return sendJson(res, 400, { error: 'modo inválido' });
@@ -103,14 +106,29 @@ server.on('upgrade', (req, socket, head) => {
   socket.on('error', () => up.destroy());
 });
 
+// Início do ComfyUI em andamento (a interface mostra "iniciando..." em vez de "offline").
+let comfyStartedAt = 0;
+
 async function ensureComfy() {
   if (!comfy.autostart || await alive(comfy.host, comfy.port)) return;
   const { command, args = [], cwd } = comfy.autostart;
   console.log('ComfyUI não está rodando; iniciando...');
   const child = spawn(command, args, { cwd, stdio: 'ignore', windowsHide: true });
-  child.on('error', (e) => console.log('não foi possível iniciar o ComfyUI:', e.message));
+  comfyStartedAt = Date.now();
+  child.on('error', (e) => { comfyStartedAt = 0; console.log('não foi possível iniciar o ComfyUI:', e.message); });
+  child.on('exit', () => { comfyStartedAt = 0; });
   process.on('exit', () => child.kill());
   process.on('SIGINT', () => process.exit());
+  // Registra quanto o ComfyUI levou para ficar pronto.
+  const t0 = Date.now();
+  const timer = setInterval(async () => {
+    if (await alive(comfy.host, comfy.port)) {
+      console.log(`ComfyUI pronto em ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+      comfyStartedAt = 0;
+      clearInterval(timer);
+    } else if (!comfyStartedAt) clearInterval(timer);
+  }, 2000);
+  timer.unref();
 }
 
 server.listen(PORT, '127.0.0.1', () => {

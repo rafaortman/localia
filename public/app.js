@@ -197,15 +197,15 @@ el.continue.addEventListener('click', () => {
 
 // ---------- estado dos serviços ----------
 async function refreshStatus() {
-  const chip = (label, ok) => {
+  const chip = (label, ok, starting = false) => {
     const s = document.createElement('span');
-    s.className = `chip ${ok ? 'ok' : 'bad'}`;
-    s.textContent = `${label}: ${ok ? 'online' : 'offline'}`;
+    s.className = `chip ${ok ? 'ok' : starting ? 'warn' : 'bad'}`;
+    s.textContent = `${label}: ${ok ? 'online' : starting ? 'iniciando... (pode levar mais de 1 min)' : 'offline'}`;
     return s;
   };
   try {
     const s = await api.status();
-    el.chips.replaceChildren(chip('ComfyUI', s.comfy), chip('Ollama', s.ollama));
+    el.chips.replaceChildren(chip('ComfyUI', s.comfy, s.comfyStarting), chip('Ollama', s.ollama));
   } catch {
     el.chips.replaceChildren(chip('Servidor', false));
   }
