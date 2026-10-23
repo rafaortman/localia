@@ -1,0 +1,89 @@
+[
+  {
+    "teste": "txt2img",
+    "id": "objeto-s1",
+    "seconds": 37.3,
+    "peakVramMB": 5220,
+    "peakRamGB": 14.2
+  },
+  {
+    "teste": "txt2img",
+    "id": "objeto-s2",
+    "seconds": 35.8,
+    "peakVramMB": 5252,
+    "peakRamGB": 14.1
+  },
+  {
+    "teste": "txt2img",
+    "id": "pessoa-s1",
+    "seconds": 36.9,
+    "peakVramMB": 5220,
+    "peakRamGB": 14.1
+  },
+  {
+    "teste": "txt2img",
+    "id": "pessoa-s2",
+    "seconds": 32.8,
+    "peakVramMB": 5252,
+    "peakRamGB": 13.8
+  },
+  {
+    "teste": "txt2img",
+    "id": "cena-s1",
+    "seconds": 36.8,
+    "peakVramMB": 5220,
+    "peakRamGB": 13.7
+  },
+  {
+    "teste": "txt2img",
+    "id": "cena-s2",
+    "seconds": 31.8,
+    "peakVramMB": 5188,
+    "peakRamGB": 13.7
+  },
+  {
+    "teste": "img2img",
+    "id": "img2img-entradaZ-0.8",
+    "seconds": 37.9,
+    "peakVramMB": 5252,
+    "peakRamGB": 13.8
+  },
+  {
+    "teste": "img2img",
+    "id": "img2img-entradaSDXL-0.6",
+    "seconds": 32.8,
+    "peakVramMB": 5284,
+    "peakRamGB": 13.8
+  },
+  {
+    "teste": "img2img",
+    "id": "img2img-entradaSDXL-0.8",
+    "seconds": 31.8,
+    "peakVramMB": 5220,
+    "peakRamGB": 14.1
+  },
+  {
+    "teste": "inpaint",
+    "id": "inpaint-0.75",
+    "seconds": 39.1,
+    "peakVramMB": 5316,
+    "peakRamGB": 13.7
+  },
+  {
+    "teste": "inpaint",
+    "id": "inpaint-0.9",
+    "seconds": 31.7,
+    "peakVramMB": 5252,
+    "peakRamGB": 13.8
+  },
+  {
+    "teste": "troca-vram",
+    "imagemQuente": 38.9,
+    "paraChat": 6.8,
+    "cargaOllama": 6.6,
+    "descarregarOllama": 0.1,
+    "imagemFria": 38.9,
+    "cargaExtraImagem": 0,
+    "peakRamGB": 13.7
+  }
+]

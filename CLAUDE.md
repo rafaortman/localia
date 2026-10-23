@@ -39,7 +39,10 @@ localia/
 ├─ server.js
 ├─ config.example.json
 ├─ workflows/        ← workflows ComfyUI em formato API (JSON), escritos à mão
-│  ├─ txt2img.json
+│  ├─ zimage-txt2img.json   ← Z-Image Turbo (padrão)
+│  ├─ zimage-img2img.json
+│  ├─ zimage-inpaint.json
+│  ├─ txt2img.json          ← SDXL (alternativa)
 │  ├─ img2img.json
 │  └─ inpaint.json
 └─ public/
@@ -54,12 +57,14 @@ localia/
 
 O modo é **global no servidor** (uma GPU = um estado). Toggle na interface chama `/api/mode`.
 
-- **→ image**: descarrega o Ollama (`POST /api/generate {"model": <modelo>, "keep_alive": 0}`). O SDXL fica residente.
+- **→ image**: descarrega o Ollama (`POST /api/generate {"model": <modelo>, "keep_alive": 0}`). O modelo de imagem fica residente.
 - **→ chat**: libera o ComfyUI (`POST /free {"unload_models": true, "free_memory": true}`). O LLM fica residente.
-- Mostrar indicador de "carregando modelo" durante a troca. Medido (`bench/swap.js`, arquivos já no cache de RAM do Windows): ~4 s para o chat, ~2 s para a imagem. Com cache frio (primeira vez após boot) medimos 25 s no Ollama e +7 s no SDXL.
+- Mostrar indicador de "carregando modelo" durante a troca. Medido (`bench/swap.js`, arquivos já no cache de RAM do Windows): ~4 s para o chat, ~2 s para a imagem. Com cache frio (primeira vez após boot) medimos 25 s no Ollama e +7 s no SDXL. Com o Z-Image (`bench/zimage-full.js`): ~6,8 s para o chat e nenhuma carga extra medida para voltar à imagem (os modelos ficaram em cache de RAM); uso de RAM do sistema ~14 de 15,7 GB, mas a medição inclui o cache de arquivos do Windows e não é conclusiva.
 - Bloquear envio de imagem em modo chat e vice-versa.
 
-## Modo imagem (ComfyUI, um único checkpoint SDXL para tudo)
+## Modo imagem (ComfyUI; Z-Image Turbo por padrão, SDXL como alternativa)
+
+**Decisão do Rafa (2026-10-23):** o modelo padrão é o **Z-Image Turbo**, com **troca manual** para o SDXL (SDXL base ou RealVisXL). Motivo: qualidade superior nos testes (`bench/out/contact.html`) e os 3 modos validados nos 6 GB. A troca vale para a sessão inteira, nunca por modo, e mostra "carregando modelo". Cada modelo usa a sua família de workflows (`zimage-*.json` ou `*.json`). Com o Z-Image selecionado, a interface esconde cfg, sampler e prompt negativo (o modelo é destilado: cfg 1, 8 steps, sem negativo); com o SDXL, mostra todos.
 
 A interface é uma caixa de prompt + imagem opcional + máscara opcional. O modo é inferido:
 
@@ -69,20 +74,22 @@ A interface é uma caixa de prompt + imagem opcional + máscara opcional. O modo
 | prompt + imagem | img2img | LoadImage → VAEEncode → KSampler (denoise < 1) |
 | prompt + imagem + máscara | inpaint | LoadImage + LoadImageMask → VAEEncode → SetLatentNoiseMask → KSampler (denoise ~0.75) |
 
+- Os nós da tabela são os do SDXL. Z-Image Turbo: `UNETLoader` (z_image_turbo_bf16) + `CLIPLoader` (qwen_3_4b, type lumina2) + `VAELoader` (ae) → `CLIPTextEncode` → `ConditioningZeroOut` (negativo) → `ModelSamplingAuraFlow` (shift 3) → `KSampler` (8 steps, cfg 1, res_multistep, simple) → `VAEDecode` → `SaveImage`; img2img e inpaint acrescentam `LoadImage` + `VAEEncode` (+ `LoadImageMask` + `SetLatentNoiseMask` no inpaint), como no SDXL.
 - Workflows escritos diretamente em formato API; o front preenche prompt, negativo, seed, steps, cfg, tamanho, denoise, nomes de arquivo.
 - Fluxo da API do ComfyUI: `POST /upload/image` (imagem e máscara) → `POST /prompt {prompt, client_id}` → WebSocket `/ws?clientId=` (`progress`, `executing` com node `null` = fim, `execution_success`/`execution_error`) → `GET /history/{prompt_id}` → `GET /view?filename=&subfolder=&type=output`.
 - `GET /object_info/CheckpointLoaderSimple` para listar checkpoints instalados.
 - `POST /interrupt` para cancelar.
 - Redimensionar imagens enviadas no front para ~1 MP com lados múltiplos de 64 antes do upload (evita estourar VRAM).
-- Defaults SDXL (decididos pelo Rafa após o benchmark): 1024×1024 (ou buckets equivalentes), **steps 15**, **cfg 7**, sampler `dpmpp_2m`, scheduler `karras` (provisório: `euler_ancestral` como opção, não testado com várias seeds). Tempo medido: ~24 s por imagem com 15 steps em 1024² (~32 s com 25).
+- **Defaults Z-Image Turbo (padrão):** 1024×1024, 8 steps, cfg 1, `res_multistep` + `simple` (valores do template do Comfy Desktop, fixos). Tempo medido: ~36 s por imagem quente (~52 s a primeira, com a carga). Pico de ~5,4 GB de VRAM, com offload para a RAM. Denoise provisório: img2img 0,8; inpaint 0,9 (o inpaint seguiu menos o prompt que o SDXL numa amostra: gorro estampado em vez de vermelho). Licença Apache 2.0. ~19 GB em disco (UNET 11,5 + text encoder 7,5 + VAE).
+- Defaults SDXL (quando o SDXL está selecionado; decididos pelo Rafa após o benchmark): 1024×1024 (ou buckets equivalentes), **steps 15**, **cfg 7**, sampler `dpmpp_2m`, scheduler `karras` (provisório: `euler_ancestral` como opção, não testado com várias seeds). Tempo medido: ~24 s por imagem com 15 steps em 1024² (~32 s com 25).
 - Denoise (provisório): img2img 0,8; inpaint 0,9.
-- **Checkpoint (decisão do Rafa):** padrão `sd_xl_base_1.0`, para todos os modos. A interface permite **trocar manualmente** por outro checkpoint instalado (lista via `/object_info/CheckpointLoaderSimple`, hoje: SDXL base e RealVisXL V5.0). A troca vale para a sessão inteira, não por modo, e mostra o indicador "carregando modelo" (tempo da troca entre dois checkpoints ainda não medido; estimativa 2–7 s). Não alternar checkpoints automaticamente entre modos.
+- **Checkpoints SDXL instalados:** `sd_xl_base_1.0` e RealVisXL V5.0 (lista via `/object_info/CheckpointLoaderSimple`); quando o SDXL está selecionado, o padrão é o SDXL base. Tempo da troca entre dois modelos de imagem ainda não medido. Não alternar modelos automaticamente entre modos.
 - Viés a lembrar: no teste de img2img/inpaint a imagem de entrada foi gerada pelo RealVisXL, o que pode ter favorecido esse modelo; a escolha do denoise 0,8 e 0,9 vale para essa entrada.
-- **Valores editáveis, com linguagem clara (decisão do Rafa):** steps, cfg, sampler, denoise e seed ficam editáveis na interface. Mudar qualquer valor gera **outra imagem** (parecida, não igual; medido: cfg, tamanho e sampler mudam a composição mesmo com a mesma seed), então o botão de confirmação se chama **"Recriar imagem"**, nunca "Aplicar" ou "Atualizar". A seed fica travada por padrão (maximiza a semelhança) e cada resultado mostra os valores usados. Para refinar a mesma imagem sem refazê-la, o caminho é "continuar a partir desta" (img2img).
+- **Valores editáveis, com linguagem clara (decisão do Rafa):** seed e denoise ficam sempre editáveis; steps, cfg, sampler e prompt negativo só aparecem com o SDXL (o Z-Image tem esses valores fixos). Mudar qualquer valor gera **outra imagem** (parecida, não igual; medido: cfg, tamanho e sampler mudam a composição mesmo com a mesma seed), então o botão de confirmação se chama **"Recriar imagem"**, nunca "Aplicar" ou "Atualizar". A seed fica travada por padrão (maximiza a semelhança) e cada resultado mostra os valores usados. Para refinar a mesma imagem sem refazê-la, o caminho é "continuar a partir desta" (img2img).
 - **Tamanho fixo em 1024 (decisão do Rafa):** mudar o tamanho com a mesma seed muda a composição inteira da imagem (medido em 768/896/1024), então não há "rascunho rápido" que preveja a imagem final. Não oferecer tamanhos menores como prévia.
 - Máscara: canvas com pincel sobre a imagem, exportada como PNG.
 - Qualquer resultado pode virar a entrada da próxima geração ("continuar a partir desta").
-- **Presets de estilo**: botões que acrescentam blocos prontos ao prompt e um negativo padrão. Custo zero de hardware.
+- **Presets de estilo**: botões que acrescentam blocos prontos ao prompt e, no SDXL, um negativo padrão (o Z-Image não usa negativo). Custo zero de hardware.
 - Limitações a comunicar na UI: o CLIP entende descrições (não instruções), não tem memória entre envios e funciona muito melhor em inglês.
 
 ## Modo chat (Ollama)
@@ -116,7 +123,7 @@ LLM empilhado na geração · IP-Adapter · modelo dedicado de inpainting · Qwe
 
 1. **Validação** — itens acima, com tempos anotados.
 2. **MVP** — server.js + proxy, modo imagem (3 workflows), toggle, chat, presets, métricas.
-3. **Ajuste** — comparar checkpoints e modelos de chat pelas métricas.
+3. **Ajuste** — comparar checkpoints e modelos de chat pelas métricas. Candidatos: `qwen3.5:4b` (chat, existe na biblioteca do Ollama; o `qwen3.6`/`qwen3.8` só têm 27B) e **Z-Image Turbo** (imagem). Z-Image medido em 2026-10-23 (`bench/zimage.js`, workflow em `bench/zimage.json`): roda nos 6 GB (pico ~5,4 GB, com offload), 8 steps, cfg 1, 1024²; ~36 s quente e ~52 s na primeira imagem (SDXL: ~24 s com 15 steps). Qualidade muito boa (pessoas, kana legível). Custos: ~19 GB em disco (UNET 11,5 + text encoder Qwen3-4B 7,5 + VAE), sem cfg nem negativo (modelo destilado), img2img, inpaint e troca de VRAM testados depois (`bench/zimage-full.js`): funcionam. **Virou o padrão do MVP em 2026-10-23** (ver Modo imagem).
 
 ## Convenções de trabalho
 

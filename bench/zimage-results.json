@@ -1,0 +1,22 @@
+[
+  {
+    "prompt": "objeto",
+    "seconds": 51.7,
+    "peakVramMB": 5438
+  },
+  {
+    "prompt": "pessoa",
+    "seconds": 35.8,
+    "peakVramMB": 5248
+  },
+  {
+    "prompt": "cena",
+    "seconds": 35.8,
+    "peakVramMB": 5280
+  },
+  {
+    "prompt": "objeto-seed2",
+    "seconds": 35.9,
+    "peakVramMB": 5248
+  }
+]
