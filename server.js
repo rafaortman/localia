@@ -16,7 +16,7 @@ const PORT = Number(process.env.PORT) || config.port;
 
 const types = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml',
+  '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon',
 };
 
 const send = (res, status, body, type = 'text/plain; charset=utf-8') => res.writeHead(status, { 'content-type': type }).end(body);
@@ -70,7 +70,13 @@ async function setMode(next) {
   return { mode, seconds: (Date.now() - t0) / 1000 };
 }
 
+// Encerramento por inatividade: a interface consulta /api/status a cada poucos segundos, então fechar a janela
+// para o servidor (e o ComfyUI que ele iniciou) e libera a GPU. 0 = nunca encerra.
+const idleMinutes = Number(process.env.LOCALIA_IDLE_EXIT_MIN ?? config.idleExitMinutes ?? 0);
+let lastSeen = Date.now();
+
 const server = http.createServer(async (req, res) => {
+  lastSeen = Date.now();
   const path = new URL(req.url, 'http://x').pathname;
   if (path.startsWith('/comfy/')) return proxy(req, res, comfy, '/comfy');
   if (path.startsWith('/ollama/')) return proxy(req, res, ollama, '/ollama');
@@ -110,4 +116,12 @@ async function ensureComfy() {
 server.listen(PORT, '127.0.0.1', () => {
   console.log(`localia em http://127.0.0.1:${PORT} (config: ${configPath.split(sep).pop()})`);
   ensureComfy();
+  if (idleMinutes > 0) {
+    setInterval(() => {
+      if (Date.now() - lastSeen > idleMinutes * 60_000) {
+        console.log(`sem uso há ${idleMinutes} min; encerrando.`);
+        process.exit(0);
+      }
+    }, 10_000).unref();
+  }
 });

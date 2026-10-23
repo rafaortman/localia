@@ -41,6 +41,31 @@ export const PRESETS = [
   { label: 'Aquarela', text: 'watercolor painting, soft pastel colors, delicate brushstrokes, paper texture' },
 ];
 
+// Exemplos de prompt para o campo vazio. O SDXL responde melhor em inglês, então cada lista tem as duas versões.
+const EXAMPLES = [
+  ['um farol de pedra numa ilha rochosa ao amanhecer, névoa baixa sobre o mar, luz dourada, foto realista',
+    'a stone lighthouse on a rocky island at dawn, low mist over the sea, golden light, photorealistic'],
+  ['uma raposa-do-ártico dormindo na neve sob uma aurora boreal, cores suaves, ilustração detalhada',
+    'an arctic fox sleeping in the snow under an aurora borealis, soft colors, detailed illustration'],
+  ['uma biblioteca antiga com estantes altíssimas e raios de sol atravessando a poeira, atmosfera acolhedora, cinematográfico',
+    'an old library with towering bookshelves and sunbeams cutting through the dust, cozy atmosphere, cinematic'],
+  ['retrato de uma senhora idosa sorrindo, rugas marcadas, luz natural de janela, foto de 85 mm',
+    'portrait of a smiling elderly woman, deep wrinkles, natural window light, 85mm photo'],
+  ['uma rua de paralelepípedos em Lisboa depois da chuva, bondes amarelos, reflexos nas poças, fim de tarde',
+    'a cobblestone street in Lisbon after the rain, yellow trams, reflections in the puddles, late afternoon'],
+  ['uma cafeteria aconchegante vista de fora numa noite de inverno, janelas iluminadas, neve caindo, aquarela',
+    'a cozy cafe seen from outside on a winter night, glowing windows, falling snow, watercolor'],
+  ['um astronauta cultivando um jardim de girassóis num planeta vermelho, luz de pôr do sol, arte conceitual',
+    'an astronaut tending a sunflower garden on a red planet, sunset light, concept art'],
+  ['um violão de madeira apoiado numa parede de tijolos, luz suave da manhã, foco nítido, fotografia de produto',
+    'a wooden acoustic guitar leaning against a brick wall, soft morning light, sharp focus, product photography'],
+];
+
+export function randomExample(family, not) {
+  const pool = EXAMPLES.map((e) => e[family === 'sdxl' ? 1 : 0]).filter((e) => e !== not);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 // p: { prompt, negative, seed, steps, cfg, sampler, scheduler, denoise, image }
 export async function buildGraph(key, mode, p) {
   const m = MODELS[key];

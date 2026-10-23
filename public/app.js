@@ -1,10 +1,10 @@
-import { MODELS, SAMPLERS, PRESETS, DEFAULTS, DEFAULT_NEGATIVE, buildGraph } from './models.js';
+import { MODELS, SAMPLERS, PRESETS, DEFAULTS, DEFAULT_NEGATIVE, buildGraph, randomExample } from './models.js';
 import * as api from './api.js';
 
 const $ = (id) => document.getElementById(id);
 const el = Object.fromEntries(['model', 'model-note', 'prompt', 'presets', 'drop', 'file', 'pick', 'drop-text', 'drop-preview', 'input-img', 'remove',
   'seed', 'new-seed', 'f-denoise', 'denoise', 'steps', 'cfg', 'sampler', 'negative', 'go', 'cancel', 'bar', 'state', 'empty', 'current', 'out',
-  'metrics', 'continue', 'download', 'history', 'chips', 'adjust'].map((id) => [id, $(id)]));
+  'metrics', 'continue', 'download', 'history', 'chips', 'adjust', 'example', 'another'].map((id) => [id, $(id)]));
 
 const randomSeed = () => Math.floor(Math.random() * 2 ** 32);
 const state = { busy: false, image: null, results: [], shown: -1, lastModel: null };
@@ -17,10 +17,20 @@ el.cfg.value = DEFAULTS.cfg;
 el.negative.value = DEFAULT_NEGATIVE;
 el.seed.value = randomSeed();
 
+// O campo vazio mostra um exemplo aleatório (placeholder); "Usar este exemplo" o copia para o campo.
+let example = '';
+function newExample() {
+  example = randomExample(MODELS[el.model.value].family, example);
+  el.prompt.placeholder = `Ex.: ${example}`;
+}
+el.example.addEventListener('click', () => { el.prompt.value = example; el.prompt.focus(); });
+el.another.addEventListener('click', newExample);
+
 function onModelChange() {
   const m = MODELS[el.model.value];
   el['model-note'].textContent = m.note;
   document.querySelectorAll('.sdxl-only').forEach((n) => { n.hidden = m.family !== 'sdxl'; });
+  newExample();
 }
 el.model.addEventListener('change', onModelChange);
 onModelChange();
@@ -112,8 +122,14 @@ async function create() {
 
   setBusy(true);
   try {
-    const st = await api.status();
-    if (!st.comfy) throw new Error('O ComfyUI não está rodando.');
+    let st = await api.status();
+    // O servidor inicia o ComfyUI sozinho ao abrir; espera até ~90 s pela porta dele.
+    for (let i = 0; !st.comfy && i < 45; i++) {
+      say('Iniciando o ComfyUI...');
+      await new Promise((r) => setTimeout(r, 2000));
+      st = await api.status();
+    }
+    if (!st.comfy) throw new Error('O ComfyUI não iniciou. Confira o config.json (comfy.autostart).');
     if (st.mode !== 'image') { say('Trocando para o modo imagem...'); await api.setMode('image'); }
     if (state.image) params.image = await api.upload(state.image.blob, `localia_${Date.now()}.png`);
 

@@ -4,3 +4,4 @@ bench/out/
 *.safetensors
 *.ckpt
 *.gguf
+localia*.log

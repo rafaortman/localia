@@ -131,3 +131,4 @@ LLM empilhado na geração · IP-Adapter · modelo dedicado de inpainting · Qwe
 - Validar restrições antes de construir; confirmar antes de mudanças grandes ou fora do escopo acima.
 - Perguntar ao Rafa qual nome ele quer antes de sugerir nomes (projetos, repositórios, etc.).
 - Atualizar este arquivo quando uma decisão mudar.
+- **Local do projeto (decisão do Rafa, 2026-10-23):** `C:\Users\rafao\dev\localia`, fora do Google Drive. Pasta sincronizada pelo Drive não serve para um repositório git (corrompe o `.git`, sincroniza imagens e logs gerados). O atalho da área de trabalho e o ícone são recriados com `criar-atalho.ps1` a partir daqui.
