@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>localia</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>localia</h1>
+    <div id="chips"></div>
+  </header>
+
+  <main>
+    <section id="request" aria-label="Pedido">
+      <label for="model">Modelo</label>
+      <select id="model"></select>
+      <p id="model-note" class="hint"></p>
+
+      <label for="prompt">O que você quer ver?</label>
+      <textarea id="prompt" rows="5" placeholder="Descreva a imagem: assunto, luz, estilo..."></textarea>
+      <div id="presets" class="chips-row" aria-label="Estilos prontos"></div>
+
+      <div id="drop" tabindex="0">
+        <input id="file" type="file" accept="image/*" hidden>
+        <p id="drop-text">Imagem de partida (opcional): arraste, cole ou <button type="button" id="pick" class="link">escolha um arquivo</button></p>
+        <div id="drop-preview" hidden>
+          <img id="input-img" alt="Imagem de partida">
+          <button type="button" id="remove" class="link">Remover</button>
+        </div>
+      </div>
+
+      <details id="adjust">
+        <summary>Ajustes</summary>
+        <div class="fields">
+          <label class="field">Seed
+            <span class="inline"><input id="seed" type="number" min="0" step="1"><button type="button" id="new-seed">Nova seed</button></span>
+            <small class="hint">A seed fica travada: repetir o pedido com ela gera uma imagem parecida. Troque a seed para obter outra imagem.</small>
+          </label>
+          <label class="field" id="f-denoise" hidden>Denoise (quanto a imagem de partida pode mudar)
+            <input id="denoise" type="number" min="0.1" max="1" step="0.05" value="0.8">
+          </label>
+          <label class="field sdxl-only">Steps <input id="steps" type="number" min="5" max="60" step="1"></label>
+          <label class="field sdxl-only">CFG <input id="cfg" type="number" min="1" max="20" step="0.5"></label>
+          <label class="field sdxl-only">Sampler <select id="sampler"></select></label>
+          <label class="field sdxl-only">Prompt negativo <textarea id="negative" rows="2"></textarea></label>
+        </div>
+        <p class="hint">Mudar qualquer valor cria <strong>outra imagem</strong> (parecida, não igual). Tamanho fixo em 1024.</p>
+      </details>
+
+      <div class="actions">
+        <button id="go" class="primary" type="button">Criar imagem</button>
+        <button id="cancel" type="button" hidden>Cancelar</button>
+      </div>
+      <progress id="bar" max="1" value="0" hidden></progress>
+      <p id="state" role="status"></p>
+    </section>
+
+    <section id="result" aria-label="Resultado">
+      <div id="empty" class="empty">A imagem aparece aqui.</div>
+      <figure id="current" hidden>
+        <img id="out" alt="Imagem gerada">
+        <figcaption id="metrics"></figcaption>
+        <div class="actions">
+          <button id="continue" type="button">Continuar a partir desta</button>
+          <a id="download" class="button" download="localia.png">Baixar</a>
+        </div>
+      </figure>
+      <div id="history" class="chips-row" aria-label="Imagens desta sessão"></div>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

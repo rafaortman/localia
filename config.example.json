@@ -1,0 +1,13 @@
+{
+  "port": 3000,
+  "comfy": {
+    "host": "127.0.0.1",
+    "port": 8188,
+    "autostart": null
+  },
+  "ollama": {
+    "host": "127.0.0.1",
+    "port": 11434,
+    "model": "qwen3:4b"
+  }
+}
