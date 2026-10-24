@@ -5,3 +5,4 @@ bench/out/
 *.ckpt
 *.gguf
 localia*.log
+*.lnk
