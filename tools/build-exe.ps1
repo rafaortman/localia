@@ -6,7 +6,7 @@ $csc = @("$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe", "$env:WINDI
   Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $csc) { Write-Error 'Compilador C# do .NET Framework não encontrado.'; exit 1 }
 
-& $csc /nologo /target:winexe /optimize+ /r:System.Windows.Forms.dll `
+& $csc /nologo /target:winexe /optimize+ /r:System.Windows.Forms.dll /r:System.Drawing.dll `
   "/win32icon:$root\public\localia.ico" "/out:$root\localia.exe" "$PSScriptRoot\localia.cs"
 if ($LASTEXITCODE -ne 0) { Write-Error 'A compilação falhou.'; exit 1 }
 Write-Output "Criado: $root\localia.exe"

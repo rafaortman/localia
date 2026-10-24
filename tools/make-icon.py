@@ -29,7 +29,7 @@ xs = [x for poly in ink for x, _ in poly]
 ys = [y for poly in ink for _, y in poly]
 x0, y0, W, H = min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)
 
-SIZES = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256]
+SIZES = [16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 96, 128, 256]   # inclui os tamanhos das escalas de tela de 100% a 200%
 SS, FILL = 16, 0.96
 
 
@@ -93,4 +93,11 @@ for n, data in frames:
     entries += struct.pack('<BBBBHHII', n % 256, n % 256, 0, 0, 1, 32, len(data), offset + len(blobs))
     blobs += data
 (root / 'public' / 'localia.ico').write_bytes(head + entries + blobs)
+
+# Um PNG por tamanho, para a página declarar cada um com `sizes`: o Edge usa o tamanho exato (20 e 40 px a 125% de
+# escala) em vez de redimensionar o maior, o que deixava a barra de tarefas borrada.
+icons = root / 'public' / 'icons'
+icons.mkdir(exist_ok=True)
+for n, data in frames:
+    (icons / f'icon-{n}.png').write_bytes(data)
 print('ok', [n for n, _ in frames])
