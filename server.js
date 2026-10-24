@@ -75,13 +75,25 @@ async function setMode(next) {
 const idleMinutes = Number(process.env.LOCALIA_IDLE_EXIT_MIN ?? config.idleExitMinutes ?? 0);
 let lastSeen = Date.now();
 
+// O proxy remove o Origin antes de falar com o ComfyUI (que recusaria), então a checagem de origem passa a ser nossa:
+// sem ela, qualquer site aberto no navegador poderia mandar pedidos para o localia (CSRF) ou usar um nome de host
+// apontado para 127.0.0.1 (DNS rebinding). Só aceitamos o nosso próprio endereço.
+const allowedHosts = new Set([`localhost:${PORT}`, `127.0.0.1:${PORT}`, `[::1]:${PORT}`]);
+function trusted(req) {
+  if (!allowedHosts.has(req.headers.host)) return false;
+  if (req.headers.origin === undefined) return true;
+  try { return allowedHosts.has(new URL(req.headers.origin).host); } catch { return false; }
+}
+
 const server = http.createServer(async (req, res) => {
+  if (!trusted(req)) return send(res, 403, 'origem não permitida');
   lastSeen = Date.now();
   const path = new URL(req.url, 'http://x').pathname;
   if (path.startsWith('/comfy/')) return proxy(req, res, comfy, '/comfy');
   if (path.startsWith('/ollama/')) return proxy(req, res, ollama, '/ollama');
   if (path === '/api/status') {
     const comfyUp = await alive(comfy.host, comfy.port);
+    if (!comfyUp) ensureComfy();
     return sendJson(res, 200, { mode, comfy: comfyUp, comfyStarting: !comfyUp && comfyStartedAt > 0, ollama: await alive(ollama.host, ollama.port) });
   }
   if (path === '/api/mode' && req.method === 'POST') {
@@ -95,7 +107,7 @@ const server = http.createServer(async (req, res) => {
 
 // WebSocket do ComfyUI (progresso): repassa o handshake e conecta os dois sockets.
 server.on('upgrade', (req, socket, head) => {
-  if (!req.url.startsWith('/comfy/')) return socket.destroy();
+  if (!trusted(req) || !req.url.startsWith('/comfy/')) return socket.destroy();
   const up = net.connect(comfy.port, comfy.host, () => {
     const headers = Object.entries(req.headers).filter(([k]) => !['host', 'origin'].includes(k)).map(([k, v]) => `${k}: ${v}`);
     up.write(`GET ${req.url.slice('/comfy'.length)} HTTP/1.1\r\nHost: ${comfy.host}:${comfy.port}\r\n${headers.join('\r\n')}\r\n\r\n`);
@@ -108,17 +120,24 @@ server.on('upgrade', (req, socket, head) => {
 
 // Início do ComfyUI em andamento (a interface mostra "iniciando..." em vez de "offline").
 let comfyStartedAt = 0;
+let comfyChild = null;
+let comfyTriedAt = 0;
+process.on('exit', () => comfyChild?.kill());
+process.on('SIGINT', () => process.exit());
 
+// Inicia o ComfyUI quando ele não está no ar: na abertura e também sob demanda (a interface consulta /api/status),
+// por exemplo se ele travar ou for fechado. Espera 30 s entre tentativas para não repetir uma configuração errada.
 async function ensureComfy() {
-  if (!comfy.autostart || await alive(comfy.host, comfy.port)) return;
+  if (!comfy.autostart || comfyStartedAt || Date.now() - comfyTriedAt < 30_000) return;
+  comfyTriedAt = Date.now();
+  if (await alive(comfy.host, comfy.port)) return;
   const { command, args = [], cwd } = comfy.autostart;
   console.log('ComfyUI não está rodando; iniciando...');
   const child = spawn(command, args, { cwd, stdio: 'ignore', windowsHide: true });
+  comfyChild = child;
   comfyStartedAt = Date.now();
   child.on('error', (e) => { comfyStartedAt = 0; console.log('não foi possível iniciar o ComfyUI:', e.message); });
-  child.on('exit', () => { comfyStartedAt = 0; });
-  process.on('exit', () => child.kill());
-  process.on('SIGINT', () => process.exit());
+  child.on('exit', () => { if (comfyChild === child) { comfyChild = null; comfyStartedAt = 0; } });
   // Registra quanto o ComfyUI levou para ficar pronto.
   const t0 = Date.now();
   const timer = setInterval(async () => {

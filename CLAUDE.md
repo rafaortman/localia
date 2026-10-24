@@ -131,4 +131,5 @@ LLM empilhado na geração · IP-Adapter · modelo dedicado de inpainting · Qwe
 - Validar restrições antes de construir; confirmar antes de mudanças grandes ou fora do escopo acima.
 - Perguntar ao Rafa qual nome ele quer antes de sugerir nomes (projetos, repositórios, etc.).
 - Atualizar este arquivo quando uma decisão mudar.
+- **Testes:** `node --test tests/api.test.mjs` (servidor rodando; o ComfyUI online habilita os testes de proxy, upload e WebSocket). O servidor só aceita `Host`/`Origin` do próprio endereço (o proxy remove o `Origin` do ComfyUI, então essa checagem é nossa proteção contra CSRF e DNS rebinding). Se o ComfyUI cair, o servidor o reinicia sob demanda (a interface consulta `/api/status`).
 - **Local do projeto (decisão do Rafa, 2026-10-23):** `C:\dev\localia`, fora do Google Drive. Pasta sincronizada pelo Drive não serve para um repositório git (corrompe o `.git`, sincroniza imagens e logs gerados). O atalho da área de trabalho e o ícone são recriados com `criar-atalho.ps1` a partir daqui.

@@ -4,7 +4,7 @@ import * as api from './api.js';
 const $ = (id) => document.getElementById(id);
 const el = Object.fromEntries(['model', 'model-note', 'prompt', 'presets', 'drop', 'file', 'pick', 'drop-text', 'drop-preview', 'input-img', 'remove',
   'seed', 'new-seed', 'f-denoise', 'denoise', 'steps', 'cfg', 'sampler', 'negative', 'go', 'cancel', 'bar', 'state', 'empty', 'current', 'out',
-  'metrics', 'continue', 'download', 'history', 'chips', 'adjust', 'example', 'another'].map((id) => [id, $(id)]));
+  'metrics', 'continue', 'download', 'history', 'chips', 'adjust', 'example-row', 'another'].map((id) => [id, $(id)]));
 
 const randomSeed = () => Math.floor(Math.random() * 2 ** 32);
 const state = { busy: false, image: null, results: [], shown: -1, lastModel: null };
@@ -17,20 +17,43 @@ el.cfg.value = DEFAULTS.cfg;
 el.negative.value = DEFAULT_NEGATIVE;
 el.seed.value = randomSeed();
 
-// O campo vazio mostra um exemplo aleatório (placeholder); "Usar este exemplo" o copia para o campo.
-let example = '';
+// Exemplos de prompt. O campo vazio mostra um exemplo (placeholder) e o botão o coloca no campo na hora.
+// Enquanto o texto ainda for um exemplo sem edição, o botão vira "Outro exemplo" e troca o texto a cada clique.
+// Se o texto for do próprio usuário, o botão some, para nunca apagar o que ele escreveu.
+let example = '';    // exemplo mostrado no placeholder
+let inserted = '';   // último exemplo colocado no campo
+const family = () => MODELS[el.model.value].family;
+const isExample = () => inserted !== '' && el.prompt.value.trim() === inserted;
+
 function newExample() {
-  example = randomExample(MODELS[el.model.value].family, example);
+  example = randomExample(family(), inserted || example);
   el.prompt.placeholder = `Ex.: ${example}`;
 }
-el.example.addEventListener('click', () => { el.prompt.value = example; el.prompt.focus(); });
-el.another.addEventListener('click', newExample);
+function syncExampleRow() {
+  const empty = el.prompt.value.trim() === '';
+  el['example-row'].hidden = !empty && !isExample();
+  el.another.textContent = isExample() ? 'Outro exemplo' : 'Usar um exemplo';
+}
+function insertExample(text) {
+  inserted = text;
+  el.prompt.value = text;
+  newExample();
+  syncExampleRow();
+}
+el.another.addEventListener('click', () => {
+  insertExample(isExample() ? randomExample(family(), inserted) : example);
+  el.prompt.focus();
+});
+el.prompt.addEventListener('input', syncExampleRow);
 
 function onModelChange() {
   const m = MODELS[el.model.value];
   el['model-note'].textContent = m.note;
   document.querySelectorAll('.sdxl-only').forEach((n) => { n.hidden = m.family !== 'sdxl'; });
-  newExample();
+  // Um exemplo ainda não editado acompanha o idioma do modelo (português no Z-Image, inglês no SDXL).
+  if (isExample()) insertExample(randomExample(family(), ''));
+  else newExample();
+  syncExampleRow();
 }
 el.model.addEventListener('change', onModelChange);
 onModelChange();
@@ -43,6 +66,7 @@ for (const p of PRESETS) {
     const cur = el.prompt.value.trim();
     el.prompt.value = cur ? `${cur}, ${p.text}` : p.text;
     el.prompt.focus();
+    syncExampleRow();
   });
   el.presets.append(b);
 }
@@ -61,11 +85,19 @@ async function fit(blob) {
 }
 
 async function setInput(blob) {
+  let fitted = null;
+  if (blob) {
+    try {
+      fitted = await fit(blob);
+    } catch {
+      say('Não foi possível ler essa imagem. Use um arquivo PNG, JPEG ou WebP.', true);
+      return;   // mantém a imagem de partida que já estava
+    }
+  }
   if (state.image) URL.revokeObjectURL(state.image.url);
   if (!blob) {
     state.image = null;
   } else {
-    const fitted = await fit(blob);
     state.image = { blob: fitted, url: URL.createObjectURL(fitted) };
     el['input-img'].src = state.image.url;
   }
@@ -115,9 +147,20 @@ async function create() {
   const model = MODELS[key];
   const mode = state.image ? 'img2img' : 'txt2img';
   const { sampler, scheduler } = SAMPLERS[Number(el.sampler.value)];
+  // Valores fora da faixa (ou vazios) são corrigidos no próprio campo, para o usuário ver o que foi usado.
+  const num = (input, { min, max, int = false, fallback }) => {
+    let v = Number(input.value);
+    if (input.value.trim() === '' || !Number.isFinite(v)) v = fallback;
+    v = Math.min(max, Math.max(min, int ? Math.round(v) : v));
+    input.value = v;
+    return v;
+  };
   const params = {
-    prompt, negative: el.negative.value, seed: Number(el.seed.value) || 0, steps: Number(el.steps.value), cfg: Number(el.cfg.value),
-    sampler, scheduler, denoise: Number(el.denoise.value),
+    prompt, negative: el.negative.value, sampler, scheduler,
+    seed: num(el.seed, { min: 0, max: 2 ** 32 - 1, int: true, fallback: randomSeed() }),
+    steps: num(el.steps, { min: 1, max: 100, int: true, fallback: DEFAULTS.steps }),
+    cfg: num(el.cfg, { min: 1, max: 30, fallback: DEFAULTS.cfg }),
+    denoise: num(el.denoise, { min: 0.05, max: 1, fallback: DEFAULTS.denoise }),
   };
 
   setBusy(true);
@@ -146,7 +189,7 @@ async function create() {
     show(state.results.length - 1);
     say('');
   } catch (e) {
-    say(e.message, true);
+    say(e.message, !e.cancelled);   // cancelar é uma escolha do usuário, não um erro
   } finally {
     setBusy(false);
   }
@@ -200,7 +243,8 @@ async function refreshStatus() {
   const chip = (label, ok, starting = false) => {
     const s = document.createElement('span');
     s.className = `chip ${ok ? 'ok' : starting ? 'warn' : 'bad'}`;
-    s.textContent = `${label}: ${ok ? 'online' : starting ? 'iniciando... (pode levar mais de 1 min)' : 'offline'}`;
+    s.textContent = `${label}: ${ok ? 'online' : starting ? 'iniciando...' : 'offline'}`;
+    if (starting && !ok) s.title = 'O ComfyUI leva de 20 s a 1 min para iniciar.';
     return s;
   };
   try {
