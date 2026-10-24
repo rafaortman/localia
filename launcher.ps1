@@ -1,4 +1,4 @@
-# Abre o localia como aplicativo: inicia o servidor (se preciso), espera a porta e abre a janela.
+﻿# Abre o localia como aplicativo: inicia o servidor (se preciso), espera a porta e abre a janela.
 # O servidor inicia o ComfyUI sozinho e encerra os dois quando a janela fica fechada por alguns minutos.
 $root = $PSScriptRoot
 $config = Get-Content (Join-Path $root 'config.json') -Raw -ErrorAction SilentlyContinue | ConvertFrom-Json

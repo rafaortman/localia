@@ -1,4 +1,4 @@
-# Gera localia.exe na raiz do projeto, com o ícone de public\localia.ico:
+﻿# Gera localia.exe na raiz do projeto, com o ícone de public\localia.ico:
 #   powershell -ExecutionPolicy Bypass -File tools\build-exe.ps1
 # Usa o compilador C# que já vem com o Windows (.NET Framework 4); não precisa instalar nada.
 $root = Split-Path $PSScriptRoot -Parent

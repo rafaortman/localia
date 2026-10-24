@@ -1,4 +1,4 @@
-# Cria o atalho "localia" na área de trabalho: powershell -ExecutionPolicy Bypass -File criar-atalho.ps1
+﻿# Cria o atalho "localia" na área de trabalho: powershell -ExecutionPolicy Bypass -File criar-atalho.ps1
 # O ícone é copiado para uma pasta local com o hash no nome: o Explorer não carrega ícones de unidade virtual
 # (Google Drive) e guarda ícones em cache pelo caminho, então um nome novo força a atualização.
 $localDir = Join-Path $env:LOCALAPPDATA 'localia'
